@@ -21,8 +21,8 @@ public interface ITaskProcessor<T extends Task> {
                 .decoration(Decoration.BOLD)
                 .build();
         String processorName = getClass().getSimpleName();
-        RichConsole.print(richTextConfig, "%s has started task processing...", processorName);
+        RichConsole.print(richTextConfig, "%s has started task processing...".formatted(processorName));
         processTasks();
-        RichConsole.print(richTextConfig, "%s has finished task processing...", processorName);
+        RichConsole.print(richTextConfig, "%s has finished task processing...".formatted(processorName));
     }
 }

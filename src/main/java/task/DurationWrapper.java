@@ -1,6 +1,5 @@
 package task;
 
-import batch.BatchConstants;
 import lombok.*;
 
 import java.time.Duration;
@@ -10,6 +9,7 @@ import java.util.concurrent.TimeUnit;
 @EqualsAndHashCode
 @Builder(access = AccessLevel.PRIVATE, toBuilder = true)
 public class DurationWrapper implements Comparable<DurationWrapper>, Cloneable {
+    private static final String SPACE = " ";
     Duration duration;
     TimeUnit timeUnit;
     @Getter
@@ -25,7 +25,6 @@ public class DurationWrapper implements Comparable<DurationWrapper>, Cloneable {
     }
 
     @Override
-    @SuppressWarnings("CloneDoesntCallSuperClone")
     public DurationWrapper clone() {
         return this.toBuilder().build();
     }
@@ -46,7 +45,7 @@ public class DurationWrapper implements Comparable<DurationWrapper>, Cloneable {
     public String toString() {
         long value = timeUnit.convert(duration);
         String timeUnitWord = value > 1 ? timeUnit.name() : timeUnit.name().substring(0, timeUnit.name().length() - 1);
-        return value + BatchConstants.SPACE + timeUnitWord.toLowerCase();
+        return value + SPACE + timeUnitWord.toLowerCase();
     }
 
     @Override

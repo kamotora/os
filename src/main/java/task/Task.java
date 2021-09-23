@@ -5,6 +5,7 @@ import lombok.*;
 import lombok.experimental.SuperBuilder;
 import output.RichConsole;
 import output.RichTextConfig;
+import processor.BatchTaskProcessor;
 
 import java.util.List;
 import java.util.Optional;
@@ -13,7 +14,14 @@ import java.util.Optional;
 @Getter
 @NoArgsConstructor
 @ToString
+@EqualsAndHashCode
 public class Task {
+    @Setter
+    long start = 0L;
+    @Setter
+    long end = 0L;
+    @Builder.Default
+    Status status = Status.CREATED;
     String name;
     @Singular(value = "operation")
     List<Operation> operations;
@@ -23,14 +31,14 @@ public class Task {
 
     public boolean isDone() {
         // all parts were performed
-        return curOpIndex >= operations.size();
+        return status == Status.ENDED;
     }
 
     private boolean proceed(long time) {
         // operation already ended
         if (isDone())
             return true;
-        if ((getCurrentOperation().remainedBurstTime -= time) <= 0) {
+        if ((getCurrentOperation().remainedTime -= time) <= 0) {
             // operation is done
             curOpIndex++;
         }
@@ -67,17 +75,43 @@ public class Task {
     }
 
 
-    public long getTotalBurstTime() {
-        return operations.stream().reduce(0L, (sum, oper) -> sum + oper.getBurstTime(), Long::sum);
+    public long getTotalExecutionTime() {
+        return operations.stream().reduce(0L, (sum, oper) -> sum + oper.getExecutionTime(), Long::sum);
     }
 
 
-    public long getTotalWaitingTime() {
-        return operations.stream().reduce(0L, (sum, oper) -> sum + oper.getWaitingTime(), Long::sum);
+    public long getTimeFromStartSystem() {
+        return end - BatchTaskProcessor.startOfSystem;
+    }
+
+    public long getTimeFromStartExecution() {
+        checkIfDone();
+        return end - start;
+    }
+
+    public long getWaitingTime() {
+        return operations.stream()
+                .filter(oper -> oper.getType() == Operation.Type.IO)
+                .mapToLong(Operation::getWaitingTime)
+                .sum();
+    }
+
+    private void checkIfDone() {
+        if (!isDone()) {
+            throw new RuntimeException("Operation is not done");
+        }
+        if(end == 0L){
+            throw new RuntimeException("End time is zero");
+        }
+    }
+
+    @Synchronized
+    public void setStatus(Status status) {
+        this.status = status;
     }
 
 
-    public long getTotalTime() {
-        return operations.stream().reduce(0L, (sum, oper) -> sum + oper.getTotalTime(), Long::sum);
+    public enum Status {
+        CREATED, PROCESSING, IO_OPERATION, WAITING, ENDED
     }
 }

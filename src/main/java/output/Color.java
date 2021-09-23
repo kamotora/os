@@ -1,5 +1,7 @@
 package output;
 
+import org.apache.commons.lang3.RandomUtils;
+
 public enum Color implements AnsiEscapeCode {
     BLACK("\u001b[30m"),
     RED("\u001b[31m"),
@@ -18,5 +20,9 @@ public enum Color implements AnsiEscapeCode {
     @Override
     public String getEscapeCode() {
         return ansi;
+    }
+
+    public static Color randomColor(){
+        return values()[RandomUtils.nextInt(0, values().length)];
     }
 }

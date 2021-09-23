@@ -1,16 +1,11 @@
 package output;
 
-import batch.BatchConstants;
-
 import java.util.Optional;
 
 public class RichConsole {
 
     private final static String RESET_ANSI = "\u001b[0m";
-
-    public static void print(RichTextConfig config, String message, Object... substitutions) {
-        print(String.format(message, substitutions), config);
-    }
+    private static final String EMPTY_STRING = "";
 
     public static void newLine() {
         System.out.println();
@@ -24,15 +19,15 @@ public class RichConsole {
                                 // color
                                 .append(Optional.ofNullable(self.getColor())
                                         .map(Color::getEscapeCode)
-                                        .orElse(BatchConstants.EMPTY_STRING))
+                                        .orElse(EMPTY_STRING))
                                 // decoration
                                 .append(Optional.ofNullable(self.getDecoration())
                                         .map(Decoration::getEscapeCode)
-                                        .orElse(BatchConstants.EMPTY_STRING))
+                                        .orElse(EMPTY_STRING))
                                 // background
                                 .append(Optional.ofNullable(self.getBackground())
                                         .map(Background::getEscapeCode)
-                                        .orElse(BatchConstants.EMPTY_STRING))
+                                        .orElse(EMPTY_STRING))
                 );
         target.append(message)
                 .append(RESET_ANSI);
@@ -40,6 +35,10 @@ public class RichConsole {
                 .map(RichTextConfig::isNewLine).orElse(true)) {
             target.append('\n');
         }
-        System.out.print(target.toString());
+        System.out.print(target);
+    }
+
+    public static void print(RichTextConfig config, String... messages) {
+        print(String.join("\n\t", messages), config);
     }
 }

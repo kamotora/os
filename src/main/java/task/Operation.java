@@ -1,22 +1,20 @@
 package task;
 
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 @Getter
+@ToString
 public class Operation {
     private final String name;
     private final String operationDescription;
     private final String interruptionDescription;
     private final DurationWrapper time;
     private final Type type;
-    long burstTime;
-    //    long turnAroundTime;
+    long executionTime;
     @Setter
     long waitingTime;
     @Setter
-    long remainedBurstTime;
+    long remainedTime;
 
     @Builder
     private Operation(Type type, String name, String operationDescription, String interruptionDescription, DurationWrapper time) {
@@ -25,15 +23,15 @@ public class Operation {
         this.operationDescription = operationDescription;
         this.interruptionDescription = interruptionDescription;
         this.time = time;
-        this.burstTime = time.getMillis();
-        this.remainedBurstTime = burstTime;
+        this.executionTime = time.getMillis();
+        this.remainedTime = executionTime;
     }
 
     public long getTotalTime() {
-        return burstTime + waitingTime;
+        return executionTime + waitingTime;
     }
 
-    public static enum Type {
+    public enum Type {
         CALCULATION, IO
     }
 
@@ -42,8 +40,10 @@ public class Operation {
      *
      * @return время выполнения операции
      */
+    @SneakyThrows
     public long proceedFully() {
-        remainedBurstTime = 0;
+        Thread.sleep(remainedTime);
+        remainedTime = 0;
         return getTotalTime();
     }
 }
