@@ -2,7 +2,6 @@ package task;
 
 import exception.IOInterruptException;
 import lombok.*;
-import lombok.experimental.SuperBuilder;
 import output.RichConsole;
 import output.RichTextConfig;
 import processor.BatchTaskProcessor;
@@ -10,26 +9,29 @@ import processor.BatchTaskProcessor;
 import java.util.List;
 import java.util.Optional;
 
-@SuperBuilder
 @Getter
-@NoArgsConstructor
 @ToString
 @EqualsAndHashCode
 public class Task {
     // timestamp начала обработки
     @Setter
-    long start = 0L;
+    private long start = 0L;
     // timestamp окончания обработки
     @Setter
-    long end = 0L;
-    @Builder.Default
-    Status status = Status.CREATED;
-    String name;
-    @Singular(value = "operation")
-    List<Operation> operations;
-    @Builder.Default
+    private long end = 0L;
+
+    private Status status = Status.CREATED;
     int curOpIndex = 0;
-    RichTextConfig decoration;
+    private final String name;
+    private final List<Operation> operations;
+    private final RichTextConfig decoration;
+
+    @Builder
+    public Task(String name, List<Operation> operations, RichTextConfig decoration) {
+        this.name = name;
+        this.operations = operations;
+        this.decoration = decoration;
+    }
 
     public boolean isDone() {
         // all parts were performed
@@ -102,9 +104,20 @@ public class Task {
         if (!isDone()) {
             throw new RuntimeException("Operation is not done");
         }
-        if(end == 0L){
+        if (end == 0L) {
             throw new RuntimeException("End time is zero");
         }
+    }
+
+    public void endTask(long endTime) {
+        if(getEnd() == 0L && !isDone()){
+            setEnd(endTime);
+            setStatus(Status.ENDED);
+        }
+        else
+            System.err.printf("Error to end task '%s'. Task already ended%n", getName());
+
+        RichConsole.print("'%s' ended".formatted(this.getName()), this.getDecoration());
     }
 
     @Synchronized

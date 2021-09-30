@@ -39,6 +39,6 @@ public class RichConsole {
     }
 
     public static void print(RichTextConfig config, String... messages) {
-        print(String.join("\n\t", messages), config);
+        print("\n" + String.join("\n", messages), config);
     }
 }

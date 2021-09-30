@@ -20,6 +20,7 @@ public class IOProcessor {
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
 
     public CompletableFuture<Operation> add(Task task) {
+        RichConsole.print("'%s' interrupted for IO operation".formatted(task.getName()), task.getDecoration());
         WaitingTask waitingTask = new WaitingTask(task, System.currentTimeMillis());
         return CompletableFuture
                 .supplyAsync(() -> start(waitingTask), executor);
@@ -35,13 +36,14 @@ public class IOProcessor {
         var operation = task.getCurrentOperation();
         operation.setWaitingTime(System.currentTimeMillis() - waitingTask.startTime);
         operation.proceedFully();
-        RichConsole.print("Operation %s  with type %s of task %s was executed"
+        var endTime = System.currentTimeMillis();
+        RichConsole.print("Operation '%s' with type %s of task %s was executed"
                 .formatted(operation.getName(), operation.getType(), task.getName()), task.getDecoration());
         ioOperationsTimer.getAndAdd(operation.getExecutionTime());
         if (task.nextOperation().isPresent())
             task.setStatus(Task.Status.WAITING);
         else
-            task.setStatus(Task.Status.ENDED);
+            task.endTask(endTime);
         return operation;
     }
 

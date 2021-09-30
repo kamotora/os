@@ -46,28 +46,28 @@ class BatchTaskProcessorTest {
         BatchTaskProcessor
                 .builder()
                 .task(TaskFactory
-                        .fixedTask("1", Color.RED, Arrays.asList(
-                                OperationFactory.calculationOperation(DurationWrapper.millis(100)),
-                                OperationFactory.networkOperation(DurationWrapper.millis(100)))))
+                        .fixedTask("1 task", Color.RED, Arrays.asList(
+                                OperationFactory.calculationOperation(DurationWrapper.millis(500)),
+                                OperationFactory.networkOperation(DurationWrapper.millis(500)))))
                 .task(TaskFactory
-                        .fixedTask("2", Color.GREEN, Arrays.asList(
-                                OperationFactory.calculationOperation(DurationWrapper.millis(100)),
-                                OperationFactory.calculationOperation(DurationWrapper.millis(100)))))
+                        .fixedTask("2 task", Color.GREEN, Arrays.asList(
+                                OperationFactory.calculationOperation(DurationWrapper.millis(500)),
+                                OperationFactory.calculationOperation(DurationWrapper.millis(500)))))
                 .task(TaskFactory
-                        .fixedTask("3", Color.CYAN, Arrays.asList(
-                                OperationFactory.networkOperation(DurationWrapper.millis(100)),
-                                OperationFactory.guiOperation(DurationWrapper.millis(100)))))
+                        .fixedTask("3 task", Color.CYAN, Arrays.asList(
+                                OperationFactory.networkOperation(DurationWrapper.millis(500)),
+                                OperationFactory.guiOperation(DurationWrapper.millis(500)))))
                 .task(TaskFactory
-                        .fixedTask("4", Color.BLUE, Arrays.asList(
-                                OperationFactory.calculationOperation(DurationWrapper.millis(100)),
-                                OperationFactory.networkOperation(DurationWrapper.millis(100)),
-                                OperationFactory.calculationOperation(DurationWrapper.millis(100)),
-                                OperationFactory.guiOperation(DurationWrapper.millis(100)))))
+                        .fixedTask("4 task", Color.BLUE, Arrays.asList(
+                                OperationFactory.calculationOperation(DurationWrapper.millis(500)),
+                                OperationFactory.networkOperation(DurationWrapper.millis(500)),
+                                OperationFactory.calculationOperation(DurationWrapper.millis(500)),
+                                OperationFactory.guiOperation(DurationWrapper.millis(500)))))
                 .task(TaskFactory
-                        .fixedTask("5", Color.YELLOW, Arrays.asList(
+                        .fixedTask("5 task", Color.YELLOW, Arrays.asList(
                                 OperationFactory.networkOperation(DurationWrapper.millis(1000)),
-                                OperationFactory.networkOperation(DurationWrapper.millis(1000)),
-                                OperationFactory.guiOperation(DurationWrapper.millis(1000)),
+                                OperationFactory.calculationOperation(DurationWrapper.millis(1000)),
+                                OperationFactory.calculationOperation(DurationWrapper.millis(1000)),
                                 OperationFactory.guiOperation(DurationWrapper.millis(1000)))))
                 .build()
                 .processTasksTraceable();

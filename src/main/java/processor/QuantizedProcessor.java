@@ -1,13 +1,15 @@
 package processor;
 
-import lombok.experimental.Accessors;
-import lombok.experimental.SuperBuilder;
 import task.DurationWrapper;
 import task.Task;
 
-@SuperBuilder
-@Accessors(fluent = true)
-public abstract class QuantizedProcessor<T extends Task> implements ITaskProcessor<T> {
+import java.util.List;
+
+public abstract class QuantizedProcessor<T extends Task> extends AbstractTaskProcessor<T> {
     protected DurationWrapper quantum;
     protected long processingTime;
+
+    protected QuantizedProcessor(List<T> tasks) {
+        super(tasks);
+    }
 }
