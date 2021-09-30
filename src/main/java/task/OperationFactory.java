@@ -2,13 +2,17 @@ package task;
 
 import lombok.experimental.UtilityClass;
 import org.apache.commons.lang3.RandomUtils;
-import util.MyRandomUtils;
 
 import java.util.List;
+import java.util.SplittableRandom;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 @UtilityClass
 public class OperationFactory {
+
+    private static final SplittableRandom splittableRandom = new SplittableRandom();
+
     public static Operation defaultOperation(DurationWrapper time) {
         return Operation.builder()
                 .type(Operation.Type.CALCULATION)
@@ -51,7 +55,7 @@ public class OperationFactory {
     }
 
     public static Operation ioOperation() {
-        return ioOperation(1000, 10000);
+        return ioOperation(100, 1000);
     }
 
     public static Operation calculationOperation(long start, long end) {
@@ -70,8 +74,17 @@ public class OperationFactory {
     }
 
     public static List<Operation> randomOperations(int maxOperationsCount, int percentOfIoOperations) {
-        return Stream.generate(MyRandomUtils.nextInt(100) <= percentOfIoOperations ? OperationFactory::ioOperation : OperationFactory::calculationOperation)
-                .limit(RandomUtils.nextInt(maxOperationsCount / 2, maxOperationsCount))
+        return fixedCountRandomOperations(RandomUtils.nextInt(maxOperationsCount / 2, maxOperationsCount), percentOfIoOperations);
+    }
+
+    public static List<Operation> fixedCountRandomOperations(int operationsCount, int percentOfIoOperations) {
+        return Stream.generate(() -> probabilitySupplier(percentOfIoOperations, OperationFactory::ioOperation, OperationFactory::calculationOperation))
+                .limit(operationsCount)
                 .toList();
+    }
+
+    //Вероятность не точная, т.к. рандом
+    private  <T> T probabilitySupplier(int probability, Supplier<T> good, Supplier<T> bad) {
+        return splittableRandom.nextInt(1, 101) <= probability ? good.get() : bad.get();
     }
 }

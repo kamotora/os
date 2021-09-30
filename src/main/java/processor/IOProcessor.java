@@ -15,7 +15,8 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 //todo переделать на имитацию задержки (без Thread.sleep() и System.currentTimeMillis())
 public class IOProcessor {
-    private final AtomicLong timer = new AtomicLong(System.currentTimeMillis());
+    // Общее время операций ввода вывода
+    private final AtomicLong ioOperationsTimer = new AtomicLong(0L);
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
 
     public CompletableFuture<Operation> add(Task task) {
@@ -34,8 +35,9 @@ public class IOProcessor {
         var operation = task.getCurrentOperation();
         operation.setWaitingTime(System.currentTimeMillis() - waitingTask.startTime);
         operation.proceedFully();
-        RichConsole.print("IO Operation %s of task %s was executed".formatted(operation.getName(), task.getName()), task.getDecoration());
-        timer.getAndAdd(operation.getExecutionTime());
+        RichConsole.print("Operation %s  with type %s of task %s was executed"
+                .formatted(operation.getName(), operation.getType(), task.getName()), task.getDecoration());
+        ioOperationsTimer.getAndAdd(operation.getExecutionTime());
         if (task.nextOperation().isPresent())
             task.setStatus(Task.Status.WAITING);
         else
@@ -44,7 +46,7 @@ public class IOProcessor {
     }
 
     public long getTime() {
-        return timer.get();
+        return ioOperationsTimer.get();
     }
 
     public static record WaitingTask(Task task, long startTime) {

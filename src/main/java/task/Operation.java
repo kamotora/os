@@ -1,6 +1,7 @@
 package task;
 
 import lombok.*;
+import output.RichConsole;
 
 @Getter
 @ToString
@@ -10,6 +11,7 @@ public class Operation {
     private final String interruptionDescription;
     private final DurationWrapper time;
     private final Type type;
+    private final Task parentTask;
     long executionTime;
     @Setter
     long waitingTime;
@@ -17,7 +19,7 @@ public class Operation {
     long remainedTime;
 
     @Builder
-    private Operation(Type type, String name, String operationDescription, String interruptionDescription, DurationWrapper time) {
+    private Operation(Type type, String name, String operationDescription, String interruptionDescription, DurationWrapper time, Task parentTask) {
         this.type = type;
         this.name = name;
         this.operationDescription = operationDescription;
@@ -25,6 +27,7 @@ public class Operation {
         this.time = time;
         this.executionTime = time.getMillis();
         this.remainedTime = executionTime;
+        this.parentTask = parentTask;
     }
 
     public long getTotalTime() {

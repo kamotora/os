@@ -16,8 +16,10 @@ import java.util.Optional;
 @ToString
 @EqualsAndHashCode
 public class Task {
+    // timestamp начала обработки
     @Setter
     long start = 0L;
+    // timestamp окончания обработки
     @Setter
     long end = 0L;
     @Builder.Default
@@ -81,7 +83,7 @@ public class Task {
 
 
     public long getTimeFromStartSystem() {
-        return end - BatchTaskProcessor.startOfSystem;
+        return end - BatchTaskProcessor.startOfSystemTime;
     }
 
     public long getTimeFromStartExecution() {

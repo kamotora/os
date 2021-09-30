@@ -21,6 +21,25 @@ class BatchTaskProcessorTest {
                 .processTasksTraceable();
     }
 
+    @Test
+    public void onlyIoOperationsTest() {
+        BatchTaskProcessor
+                .builder()
+                .task(TaskFactory
+                        .fixedTask("1", Color.RED, Arrays.asList(
+                                OperationFactory.guiOperation(DurationWrapper.millis(100)),
+                                OperationFactory.networkOperation(DurationWrapper.millis(200)))))
+                .task(TaskFactory
+                        .fixedTask("2", Color.GREEN, Arrays.asList(
+                                OperationFactory.guiOperation(DurationWrapper.millis(50)),
+                                OperationFactory.networkOperation(DurationWrapper.millis(100)))))
+                .task(TaskFactory
+                        .fixedTask("3", Color.CYAN, Arrays.asList(
+                                OperationFactory.guiOperation(DurationWrapper.millis(100)),
+                                OperationFactory.networkOperation(DurationWrapper.millis(100)))))
+                .build()
+                .processTasksTraceable();
+    }
 
     @Test
     public void fixedValuesTest() {

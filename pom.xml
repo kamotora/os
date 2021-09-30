@@ -71,13 +71,19 @@
         <dependency>
             <groupId>org.jetbrains</groupId>
             <artifactId>annotations</artifactId>
-            <version>21.0.1</version>
+            <version>22.0.0</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
-            <version>30.1.1-jre</version>
+            <version>31.0.1-jre</version>
         </dependency>
+        <!-- рисуем графики как в matplotlib, но на java-->
+        <!--        <dependency>-->
+        <!--            <groupId>com.github.sh0nk</groupId>-->
+        <!--            <artifactId>matplotlib4j</artifactId>-->
+        <!--            <version>0.5.0</version>-->
+        <!--        </dependency>-->
     </dependencies>
 </project>
