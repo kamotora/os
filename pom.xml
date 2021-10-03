@@ -80,10 +80,10 @@
             <version>31.0.1-jre</version>
         </dependency>
         <!-- рисуем графики как в matplotlib, но на java-->
-        <!--        <dependency>-->
-        <!--            <groupId>com.github.sh0nk</groupId>-->
-        <!--            <artifactId>matplotlib4j</artifactId>-->
-        <!--            <version>0.5.0</version>-->
-        <!--        </dependency>-->
+        <dependency>
+            <groupId>com.github.sh0nk</groupId>
+            <artifactId>matplotlib4j</artifactId>
+            <version>0.5.0</version>
+        </dependency>
     </dependencies>
 </project>

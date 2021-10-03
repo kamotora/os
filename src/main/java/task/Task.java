@@ -83,11 +83,6 @@ public class Task {
         return operations.stream().reduce(0L, (sum, oper) -> sum + oper.getExecutionTime(), Long::sum);
     }
 
-
-    public long getTimeFromStartSystem() {
-        return end - BatchTaskProcessor.startOfSystemTime;
-    }
-
     public long getTimeFromStartExecution() {
         checkIfDone();
         return end - start;
@@ -105,7 +100,7 @@ public class Task {
             throw new RuntimeException("Operation is not done");
         }
         if (end == 0L) {
-            throw new RuntimeException("End time is zero");
+            throw new RuntimeException("End ioOperationsTime is zero");
         }
     }
 

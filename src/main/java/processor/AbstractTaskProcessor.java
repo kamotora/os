@@ -12,7 +12,7 @@ public abstract class AbstractTaskProcessor<T extends Task> {
         this.tasks = tasks;
     }
 
-    abstract void processTasks();
+    abstract ProcessorStatistics processTasks();
 
     protected void processTasksTraceable() {
         RichTextConfig richTextConfig = RichTextConfig.builder()
@@ -31,7 +31,7 @@ public abstract class AbstractTaskProcessor<T extends Task> {
         tasks.forEach(task -> {
             RichConsole.print("'%s' info".formatted(task.getName()), task.getDecoration());
             task.getOperations().forEach(operation -> {
-                RichConsole.print("\tOperation '%s': type: %s, time: %s".formatted(operation.getName(), operation.getType(), operation.getTime().toString()), task.getDecoration());
+                RichConsole.print("\tOperation '%s': type: %s, ioOperationsTime: %s".formatted(operation.getName(), operation.getType(), operation.getTime().toString()), task.getDecoration());
             });
         });
     }

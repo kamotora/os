@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.LongSummaryStatistics;
 
 public class BatchTaskProcessor extends AbstractTaskProcessor<Task> {
-    public static long startOfSystemTime;
+    private long startOfSystemTime;
 
     private final IOProcessor ioProcessor = new IOProcessor();
 
@@ -23,7 +23,7 @@ public class BatchTaskProcessor extends AbstractTaskProcessor<Task> {
     }
 
     @Override
-    public void processTasks() {
+    public ProcessorStatistics processTasks() {
         startOfSystemTime = System.currentTimeMillis();
         ArrayList<Task> processingTasks = new ArrayList<>(this.tasks);
         // Общее время на обработку операций НЕ ввода/вывода
@@ -64,7 +64,7 @@ public class BatchTaskProcessor extends AbstractTaskProcessor<Task> {
                     .sum();
             RichConsole.print(task.getName() +
                             ":\n\t Рабочее время задачи (ms): " + task.getTotalExecutionTime() +
-                            "\n\t Время от начала старта системы до завершения задачи (ms): " + task.getTimeFromStartSystem() +
+                            "\n\t Время от начала старта системы до завершения задачи (ms): " + (task.getEnd() - startOfSystemTime) +
                             "\n\t Время от начала старта задачи до завершения задачи (ms): " + task.getTimeFromStartExecution() +
                             "\n\t Общее время вычислительных задач (ms): " + calcTime +
                             "\n\t Общее время IO задач (ms): " + ioTime +
@@ -78,7 +78,7 @@ public class BatchTaskProcessor extends AbstractTaskProcessor<Task> {
                 .mapToLong(Task::getTimeFromStartExecution)
                 .summaryStatistics();
         LongSummaryStatistics fromStartStat = this.tasks.stream()
-                .mapToLong(Task::getTimeFromStartSystem)
+                .mapToLong(task -> (task.getEnd() - startOfSystemTime))
                 .summaryStatistics();
         LongSummaryStatistics waitTimeStat = this.tasks.stream()
                 .mapToLong(Task::getWaitingTime)
@@ -87,14 +87,19 @@ public class BatchTaskProcessor extends AbstractTaskProcessor<Task> {
                 .decoration(Decoration.UNDERLINE)
                 .build();
         RichConsole.print("Статистика:\n\t", statConfig);
-        RichConsole.print("Время, затраченное на диспетчеризацию (ms): %d".formatted(batchTimer - calcOperationsTime), statConfig);
+        long dispatcherTime = batchTimer - calcOperationsTime;
+        RichConsole.print("Время, затраченное на диспетчеризацию (ms): %d".formatted(dispatcherTime), statConfig);
         RichConsole.print("Время от старта системы до завершения всех задач (ms): %d".formatted(totalTime), statConfig);
         RichConsole.print("Общее время вычислительных операций (ms): %d".formatted(calcOperationsTime), statConfig);
+        RichConsole.print("%% Времени вычислительных операций от времени работы системы: %d".formatted((int) (((double) calcOperationsTime) / totalTime * 100)), statConfig);
         RichConsole.print("Общее время IO операций (ms): %d".formatted(ioProcessor.getTime()), statConfig);
+        RichConsole.print("%% времени IO операций от времени работы системы: %d".formatted((int) (((double) ioProcessor.getTime()) / totalTime * 100)), statConfig);
         printStat("Рабочее время задачи", execTimeStat, statConfig);
-        printStat("Время от начала старта системы до завершения задачи", fromExecStat, statConfig);
-        printStat("Время от начала старта задачи до завершения задачи", fromStartStat, statConfig);
+        printStat("Время от начала старта системы до завершения задачи", fromStartStat, statConfig);
+        printStat("Время от начала старта задачи до завершения задачи", fromExecStat, statConfig);
         printStat("Общее время ожидания задачи", waitTimeStat, statConfig);
+        RichConsole.print("%% Среднего времени ожидания от времени работы системы: %d".formatted((int) (waitTimeStat.getAverage() / totalTime * 100)), statConfig);
+        return new ProcessorStatistics(execTimeStat, fromExecStat, fromStartStat, waitTimeStat, dispatcherTime, totalTime, calcOperationsTime, ioProcessor.getTime());
     }
 
     private void printStat(String statName, LongSummaryStatistics stat, RichTextConfig config) {
