@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-class BatchTaskProcessorTest {
+class RoundRobinTaskProcessorTest {
     @Test
     public void fullRandomTest() {
         List<Pair<List<Task>, ProcessorStatistics>> stats = new ArrayList<>();
@@ -29,7 +29,7 @@ class BatchTaskProcessorTest {
                     var tasks = IntStream.range(0, RandomUtils.nextInt(2, 8)).mapToObj(
                             j -> TaskFactory.randomTask(Integer.toString(j), Color.randomColor(), 5,
                                     RandomUtils.nextInt(20, 100))).collect(Collectors.toList());
-                    ProcessorStatistics statistics = BatchTaskProcessor
+                    ProcessorStatistics statistics = RoundRobinTaskProcessor
                             .builder()
                             .tasks(tasks)
                             .build()
@@ -67,7 +67,7 @@ class BatchTaskProcessorTest {
 
     @Test
     public void test() {
-        BatchTaskProcessor
+        RoundRobinTaskProcessor
                 .builder()
                 .task(TaskFactory.randomTask("1", Color.RED, 10, 30))
                 .task(TaskFactory.randomTask("2", Color.GREEN, 10, 40))
@@ -79,7 +79,7 @@ class BatchTaskProcessorTest {
 
     @Test
     public void onlyIoOperationsTest() {
-        BatchTaskProcessor
+        RoundRobinTaskProcessor
                 .builder()
                 .task(TaskFactory
                         .fixedTask("1", Color.RED, Arrays.asList(
@@ -99,7 +99,7 @@ class BatchTaskProcessorTest {
 
     @Test
     public void fixedValuesTest() {
-        BatchTaskProcessor
+        RoundRobinTaskProcessor
                 .builder()
                 .task(TaskFactory
                         .fixedTask("1 task", Color.RED, Arrays.asList(
@@ -131,7 +131,7 @@ class BatchTaskProcessorTest {
 
     @Test
     public void fixedValuesTest2() {
-        BatchTaskProcessor
+        RoundRobinTaskProcessor
                 .builder()
                 .task(TaskFactory
                         .fixedTask("1 task", Color.RED, Arrays.asList(
@@ -164,16 +164,16 @@ class BatchTaskProcessorTest {
 
     @Test
     public void longTaskTest() {
-        BatchTaskProcessor
+        RoundRobinTaskProcessor
                 .builder()
                 .task(TaskFactory
                         .fixedTask("1", Color.RED, Arrays.asList(
-                                OperationFactory.calculationOperation(DurationWrapper.millis(5000))/*,
-                                OperationFactory.networkOperation(DurationWrapper.millis(2000))*/)))
+                                OperationFactory.calculationOperation(DurationWrapper.millis(3000)),
+                                OperationFactory.networkOperation(DurationWrapper.millis(100)))))
                 .task(TaskFactory
                         .fixedTask("2", Color.GREEN, Arrays.asList(
-              /*                  OperationFactory.networkOperation(DurationWrapper.millis(100)),*/
-                                OperationFactory.calculationOperation(DurationWrapper.millis(100)))))
+                                OperationFactory.calculationOperation(DurationWrapper.millis(3000)),
+                                OperationFactory.networkOperation(DurationWrapper.millis(100)))))
                 .build()
                 .processTasksTraceable();
     }

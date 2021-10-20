@@ -1,7 +1,6 @@
 package task;
 
 import lombok.*;
-import output.RichConsole;
 
 @Getter
 @ToString
@@ -47,6 +46,24 @@ public class Operation {
     public long proceedFully() {
         Thread.sleep(remainedTime);
         remainedTime = 0;
-        return getTotalTime();
+        return executionTime;
+    }
+
+    /**
+     * Выполнять операцию заданное кол-во времени
+     *
+     * @param quantum квант выполнения
+     * @return время выполнения операции (минимум от {@code quantum} и  {@code remainedTime}) в мс
+     */
+    @SneakyThrows
+    public long proceed(DurationWrapper quantum) {
+        long workingTime = Math.min(quantum.millis, remainedTime);
+        Thread.sleep(workingTime);
+        remainedTime -= workingTime;
+        return workingTime;
+    }
+
+    public boolean isEnded() {
+        return remainedTime <= 0;
     }
 }

@@ -1,5 +1,6 @@
 package task;
 
+import exception.CurrentOperationNotEndedException;
 import exception.IOInterruptException;
 import lombok.*;
 import output.RichConsole;
@@ -66,10 +67,13 @@ public class Task {
     }
 
     public Optional<Operation> nextOperation() {
+        if(!getCurrentOperation().isEnded())
+            throw new CurrentOperationNotEndedException(this);
         curOpIndex++;
         try {
             return Optional.of(getCurrentOperation());
         } catch (IndexOutOfBoundsException e) {
+            curOpIndex--;
             return Optional.empty();
         }
     }
