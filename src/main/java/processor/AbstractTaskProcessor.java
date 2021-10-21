@@ -9,6 +9,8 @@ import java.util.List;
 import java.util.LongSummaryStatistics;
 
 public abstract class AbstractTaskProcessor<T extends Task> {
+    public static final RichTextConfig UNDERLINE_CONFIG = RichTextConfig.metaMessageStyle();
+
     protected final List<T> tasks;
     // Общее время на обработку операций НЕ ввода/вывода
     protected long timer = 0L;
@@ -27,7 +29,6 @@ public abstract class AbstractTaskProcessor<T extends Task> {
         ArrayList<Task> processingTasks = new ArrayList<>(this.tasks);
         processTasks(processingTasks);
         long totalTime = System.currentTimeMillis() - startOfSystemTime;
-        // todo перенести вывод статистики
         // output stats
         RichConsole.print("Tasks performed:\n", null);
         RichConsole.print("Tasks per second: %.3f".formatted(this.tasks.size() / (totalTime * 0.001)), null);
@@ -50,8 +51,8 @@ public abstract class AbstractTaskProcessor<T extends Task> {
                             "\n\t Время от начала старта системы до завершения задачи (ms): " + (task.getEnd() - startOfSystemTime) +
                             "\n\t Время от начала старта задачи до завершения задачи (ms): " + task.getTimeFromStartExecution() +
                             "\n\t Общее время вычислительных задач (ms): " + calcTime +
-                            "\n\t Общее время IO задач (ms): " + ioTime +
-                            "\n\t Общее время ожидания (ms): " + waitingTime,
+                            "\n\t Общее время IO операций (ms): " + ioTime +
+                            "\n\t Общее время ожидания IO операций (ms): " + waitingTime,
                     task.getDecoration());
         }
         LongSummaryStatistics execTimeStat = this.tasks.stream()
@@ -71,22 +72,40 @@ public abstract class AbstractTaskProcessor<T extends Task> {
                 .build();
         RichConsole.print("Статистика:\n\t", statConfig);
         long dispatcherTime = timer - calcOperationsTime;
-        RichConsole.print("Время, затраченное на диспетчеризацию (ms): %d".formatted(dispatcherTime), statConfig);
-        RichConsole.print("Время от старта системы до завершения всех задач (ms): %d".formatted(totalTime), statConfig);
-        RichConsole.print("Общее время вычислительных операций (ms): %d".formatted(calcOperationsTime), statConfig);
-        RichConsole.print("%% Времени вычислительных операций от времени работы системы: %d".formatted((int) (((double) calcOperationsTime) / totalTime * 100)), statConfig);
-        RichConsole.print("Общее время IO операций (ms): %d".formatted(ioProcessor.getTime()), statConfig);
-        RichConsole.print("%% времени IO операций от времени работы системы: %d".formatted((int) (((double) ioProcessor.getTime()) / totalTime * 100)), statConfig);
-        printStat("Рабочее время задачи", execTimeStat, statConfig);
-        printStat("Время от начала старта системы до завершения задачи", fromStartStat, statConfig);
-        printStat("Время от начала старта задачи до завершения задачи", fromExecStat, statConfig);
-        printStat("Общее время ожидания задачи", waitTimeStat, statConfig);
-        RichConsole.print("%% Среднего времени ожидания от времени работы системы: %d".formatted((int) (waitTimeStat.getAverage() / totalTime * 100)), statConfig);
-        return new ProcessorStatistics(execTimeStat, fromExecStat, fromStartStat, waitTimeStat, dispatcherTime, totalTime, calcOperationsTime, ioProcessor.getTime());
+        var stat = new ProcessorStatistics(execTimeStat, fromExecStat, fromStartStat,
+                waitTimeStat, dispatcherTime, totalTime, calcOperationsTime, ioProcessor.getTime());
+        printProcessorStatistics(stat);
+        return stat;
+//        todo delete
+//        RichConsole.print("Время, затраченное на диспетчеризацию (ms): %d".formatted(dispatcherTime), statConfig);
+//        RichConsole.print("Время от старта системы до завершения всех задач (ms): %d".formatted(totalTime), statConfig);
+//        RichConsole.print("Общее время вычислительных операций (ms): %d".formatted(calcOperationsTime), statConfig);
+//        RichConsole.print("%% Времени вычислительных операций от времени работы системы: %d".formatted((int) (((double) calcOperationsTime) / totalTime * 100)), statConfig);
+//        RichConsole.print("Общее время IO операций (ms): %d".formatted(ioProcessor.getTime()), statConfig);
+//        RichConsole.print("%% времени IO операций от времени работы системы: %d".formatted((int) (((double) ioProcessor.getTime()) / totalTime * 100)), statConfig);
+//        printStat("Рабочее время задачи", execTimeStat, statConfig);
+//        printStat("Время от начала старта системы до завершения задачи", fromStartStat, statConfig);
+//        printStat("Время от начала старта задачи до завершения задачи", fromExecStat, statConfig);
+//        printStat("Общее время ожидания IO операций", waitTimeStat, statConfig);
+//        RichConsole.print("%% Среднего времени ожидания от времени работы системы: %d".formatted((int) (waitTimeStat.getAverage() / totalTime * 100)), statConfig);
+    }
+
+    public static void printProcessorStatistics(ProcessorStatistics stat) {
+        RichConsole.print("Время, затраченное на диспетчеризацию (ms): %d".formatted(stat.dispatcherTime()), UNDERLINE_CONFIG);
+        RichConsole.print("Время от старта системы до завершения всех задач (ms): %d".formatted(stat.totalTime()), UNDERLINE_CONFIG);
+        RichConsole.print("Общее время вычислительных операций (ms): %d".formatted(stat.calcOperationsTime()), UNDERLINE_CONFIG);
+        RichConsole.print("%% Времени вычислительных операций от времени работы системы: %d".formatted((int) (((double) stat.calcOperationsTime()) / stat.totalTime() * 100)), UNDERLINE_CONFIG);
+        RichConsole.print("Общее время IO операций (ms): %d".formatted(stat.ioOperationsTime()), UNDERLINE_CONFIG);
+        RichConsole.print("%% времени IO операций от времени работы системы: %d".formatted((int) (((double) stat.ioOperationsTime()) / stat.totalTime() * 100)), UNDERLINE_CONFIG);
+        printStat("Рабочее время задачи", stat.execTimeStat(), UNDERLINE_CONFIG);
+        printStat("Время от начала старта системы до завершения задачи", stat.fromStartStat(), UNDERLINE_CONFIG);
+        printStat("Время от начала старта задачи до завершения задачи", stat.fromExecStat(), UNDERLINE_CONFIG);
+        printStat("Общее время ожидания IO операций", stat.waitTimeStat(), UNDERLINE_CONFIG);
+        RichConsole.print("%% Среднего времени ожидания от времени работы системы: %d".formatted((int) (stat.waitTimeStat().getAverage() / stat.totalTime() * 100)), UNDERLINE_CONFIG);
 
     }
 
-    private void printStat(String statName, LongSummaryStatistics stat, RichTextConfig config) {
+    private static void printStat(String statName, LongSummaryStatistics stat, RichTextConfig config) {
         RichConsole.print(config,
                 "Average %s (ms): %.2f".formatted(statName, stat.getAverage()),
                 "Max %s (ms): %d".formatted(statName, stat.getMax()),

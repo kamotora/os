@@ -1,69 +1,88 @@
 package processor;
 
-import com.github.sh0nk.matplotlib4j.Plot;
-import com.github.sh0nk.matplotlib4j.PythonConfig;
 import lombok.SneakyThrows;
 import org.apache.commons.lang3.RandomUtils;
-import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.Test;
 import output.Color;
+import output.RichConsole;
+import output.RichTextConfig;
 import task.DurationWrapper;
 import task.OperationFactory;
 import task.Task;
 import task.TaskFactory;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 class RoundRobinTaskProcessorTest {
+
     @Test
-    public void fullRandomTest() {
-        List<Pair<List<Task>, ProcessorStatistics>> stats = new ArrayList<>();
-        IntStream.range(0, 19)
-                .parallel()
-                .forEach(i -> {
-                    var tasks = IntStream.range(0, RandomUtils.nextInt(2, 8)).mapToObj(
-                            j -> TaskFactory.randomTask(Integer.toString(j), Color.randomColor(), 5,
-                                    RandomUtils.nextInt(20, 100))).collect(Collectors.toList());
-                    ProcessorStatistics statistics = RoundRobinTaskProcessor
-                            .builder()
-                            .tasks(tasks)
-                            .build()
-                            .processTasksTraceable();
-                    stats.add(Pair.of(tasks, statistics));
-                });
-        List<Pair<Double, Double>> collect = stats.stream()
-                .map(Pair::getRight)
-                .map(stat -> Pair.of((double) (stat.ioOperationsTime()) / stat.totalTime() * 100,
-                        stat.waitTimeStat().getAverage() / stat.totalTime() * 100))
-                .collect(Collectors.toList());
-        drawPlot(collect, "% IO operations time", "% average waiting time");
-    }
-
     @SneakyThrows
-    private void drawPlot(List<Pair<Double, Double>> points, String xLabel, String yLabel) {
-        List<Pair<? extends Number, ? extends Number>> sorted = points.stream()
-                .sorted(Comparator.comparing(Pair::getLeft))
-                .collect(Collectors.toList());
-        var x = sorted.stream()
-                .map(Pair::getLeft)
-                .collect(Collectors.toList());
-        var y = sorted.stream()
-                .map(Pair::getRight)
-                .collect(Collectors.toList());
-
-        Plot plt = Plot.create(PythonConfig.pythonBinPathConfig("/home/kamotora/anaconda3/bin/python"));
-        plt.plot()
-                .add(x, y, "-ok");
-        plt.xlabel(xLabel);
-        plt.ylabel(yLabel);
-        plt.legend();
-        plt.show();
+    public void fullRandomTest() {
+        var tasks = IntStream.range(0, 19)
+                .parallel()
+                .mapToObj(i ->
+                        IntStream
+                                .range(0, RandomUtils.nextInt(2, 8))
+                                .mapToObj(j ->
+                                        TaskFactory.randomTask(Integer.toString(j), Color.randomColor(), 5,
+                                                RandomUtils.nextInt(30, 100))
+                                )
+                                .collect(Collectors.toList())
+                ).collect(Collectors.toList());
+        ExecutorService executorService = Executors.newFixedThreadPool(5);
+        executorService.submit(() -> randomTest(tasks, null));
+        var batch = executorService.submit(() -> randomTest(tasks, null));
+        var robin2ms = executorService.submit(() -> randomTest(tasks, DurationWrapper.millis(2)));
+        var robin10ms = executorService.submit(() -> randomTest(tasks, DurationWrapper.millis(10)));
+        var robin150ms = executorService.submit(() -> randomTest(tasks, DurationWrapper.millis(150)));
+        var robin500ms = executorService.submit(() -> randomTest(tasks, DurationWrapper.millis(500)));
+        executorService.shutdown();
+        executorService.awaitTermination(1, TimeUnit.DAYS);
+        Thread.sleep(100);
+        RichConsole.print("#### BATCH", RichTextConfig.metaMessageStyle());
+        AbstractTaskProcessor.printProcessorStatistics(batch.get());
+        RichConsole.print("#### ROBIN 2 ms", RichTextConfig.metaMessageStyle());
+        AbstractTaskProcessor.printProcessorStatistics(robin2ms.get());
+        RichConsole.print("#### ROBIN 10 ms", RichTextConfig.metaMessageStyle());
+        AbstractTaskProcessor.printProcessorStatistics(robin10ms.get());
+        RichConsole.print("#### ROBIN 150 ms", RichTextConfig.metaMessageStyle());
+        AbstractTaskProcessor.printProcessorStatistics(robin150ms.get());
+        RichConsole.print("#### ROBIN 500 ms", RichTextConfig.metaMessageStyle());
+        AbstractTaskProcessor.printProcessorStatistics(robin500ms.get());
+//        List<Pair<Double, Double>> collect = stats.stream()
+//                .map(Pair::getRight)
+//                .map(stat -> Pair.of((double) (stat.ioOperationsTime()) / stat.totalTime() * 100,
+//                        stat.waitTimeStat().getAverage() / stat.totalTime() * 100))
+//                .collect(Collectors.toList());
+//        PlotUtils.draw(collect, "% IO operations time", "% average waiting time");
     }
+
+    private ProcessorStatistics randomTest(List<List<Task>> tasks, DurationWrapper quantum) {
+        return tasks.stream()
+                .parallel()
+                .map(taskList -> {
+                            var cloned = taskList.stream().map(Task::clone).toList();
+                            if (quantum != null)
+                                return RoundRobinTaskProcessor.builder()
+                                        .tasks(cloned)
+                                        .quantum(quantum)
+                                        .build()
+                                        .processTasksTraceable();
+                            else
+                                return BatchTaskProcessor.builder()
+                                        .tasks(cloned)
+                                        .build()
+                                        .processTasksTraceable();
+                        }
+                ).reduce(ProcessorStatistics.createZero(), ProcessorStatistics::sum);
+    }
+
 
     @Test
     public void test() {
@@ -168,12 +187,12 @@ class RoundRobinTaskProcessorTest {
                 .builder()
                 .task(TaskFactory
                         .fixedTask("1", Color.RED, Arrays.asList(
-                                OperationFactory.calculationOperation(DurationWrapper.millis(3000)),
-                                OperationFactory.networkOperation(DurationWrapper.millis(100)))))
+                                OperationFactory.calculationOperation(DurationWrapper.millis(5000))/*,
+                                OperationFactory.networkOperation(DurationWrapper.millis(100))*/)))
                 .task(TaskFactory
                         .fixedTask("2", Color.GREEN, Arrays.asList(
-                                OperationFactory.calculationOperation(DurationWrapper.millis(3000)),
-                                OperationFactory.networkOperation(DurationWrapper.millis(100)))))
+                                OperationFactory.calculationOperation(DurationWrapper.millis(100))/*,
+                                OperationFactory.networkOperation(DurationWrapper.millis(100))*/)))
                 .build()
                 .processTasksTraceable();
     }

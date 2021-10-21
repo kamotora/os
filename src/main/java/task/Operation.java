@@ -17,7 +17,7 @@ public class Operation {
     @Setter
     long remainedTime;
 
-    @Builder
+    @Builder(toBuilder = true)
     private Operation(Type type, String name, String operationDescription, String interruptionDescription, DurationWrapper time, Task parentTask) {
         this.type = type;
         this.name = name;
@@ -52,12 +52,12 @@ public class Operation {
     /**
      * Выполнять операцию заданное кол-во времени
      *
-     * @param quantum квант выполнения
+     * @param quantum квант времени (в мс)
      * @return время выполнения операции (минимум от {@code quantum} и  {@code remainedTime}) в мс
      */
     @SneakyThrows
-    public long proceed(DurationWrapper quantum) {
-        long workingTime = Math.min(quantum.millis, remainedTime);
+    public long proceed(long quantum) {
+        long workingTime = Math.min(quantum, remainedTime);
         Thread.sleep(workingTime);
         remainedTime -= workingTime;
         return workingTime;
@@ -65,5 +65,11 @@ public class Operation {
 
     public boolean isEnded() {
         return remainedTime <= 0;
+    }
+
+    @Override
+    public Operation clone() {
+        return this.toBuilder()
+                .build();
     }
 }

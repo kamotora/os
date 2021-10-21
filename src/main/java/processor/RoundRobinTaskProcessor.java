@@ -2,18 +2,17 @@ package processor;
 
 import lombok.Builder;
 import lombok.Singular;
-import output.Decoration;
 import output.RichConsole;
-import output.RichTextConfig;
 import task.DurationWrapper;
 import task.Operation;
 import task.Task;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.LongSummaryStatistics;
 
 public class RoundRobinTaskProcessor extends QuantizedProcessor<Task> {
+
+    // Неизрасходованное время прошлой операции
+    private long additionalTime = 0L;
 
     @Builder
     public RoundRobinTaskProcessor(@Singular List<Task> tasks, DurationWrapper quantum) {
@@ -39,15 +38,6 @@ public class RoundRobinTaskProcessor extends QuantizedProcessor<Task> {
         }
     }
 
-
-    private void printStat(String statName, LongSummaryStatistics stat, RichTextConfig config) {
-        RichConsole.print(config,
-                "Average %s (ms): %.2f".formatted(statName, stat.getAverage()),
-                "Max %s (ms): %d".formatted(statName, stat.getMax()),
-                "Min %s (ms): %d".formatted(statName, stat.getMin()),
-                "Sum %s (ms): %d".formatted(statName, stat.getSum()));
-    }
-
     private long processTask(Task task) {
         long startTime = System.currentTimeMillis();
         if (task.getStatus() == Task.Status.ENDED || task.getStatus() == Task.Status.IO_OPERATION)
@@ -58,13 +48,17 @@ public class RoundRobinTaskProcessor extends QuantizedProcessor<Task> {
             task.setStatus(Task.Status.IO_OPERATION);
             ioProcessor.add(task);
         } else {
-            var workingTime = operation.proceed(quantum);
-            RichConsole.print("Operation '%s' with type '%s' of task %s was worked %d mills"
-                    .formatted(operation.getName(), operation.getType(), task.getName(), workingTime), task.getDecoration());
+            var workingTime = operation.proceed(quantum.getMillis() + additionalTime);
+            additionalTime += quantum.getMillis() - workingTime;
+//            RichConsole.print("Operation '%s' with type '%s' of task %s was worked %d mills"
+//                    .formatted(operation.getName(), operation.getType(), task.getName(), workingTime), task.getDecoration());
             if (operation.isEnded()) {
+                RichConsole.print("Operation '%s' with type '%s' of task %s was ended"
+                        .formatted(operation.getName(), operation.getType(), task.getName()), task.getDecoration());
                 var nextOperation = task.nextOperation();
-                if (nextOperation.isEmpty())
-                    task.setStatus(Task.Status.ENDED);
+                if (nextOperation.isEmpty()) {
+                    task.endTask(System.currentTimeMillis());
+                }
             }
         }
         return System.currentTimeMillis() - startTime;

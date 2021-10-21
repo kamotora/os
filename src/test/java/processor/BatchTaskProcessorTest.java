@@ -11,6 +11,7 @@ import task.DurationWrapper;
 import task.OperationFactory;
 import task.Task;
 import task.TaskFactory;
+import util.PlotUtils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -28,20 +29,22 @@ class BatchTaskProcessorTest {
                 .forEach(i -> {
                     var tasks = IntStream.range(0, RandomUtils.nextInt(2, 8)).mapToObj(
                             j -> TaskFactory.randomTask(Integer.toString(j), Color.randomColor(), 5,
-                                    RandomUtils.nextInt(20, 100))).collect(Collectors.toList());
-                    ProcessorStatistics statistics = BatchTaskProcessor
+                                    RandomUtils.nextInt(30, 100))).collect(Collectors.toList());
+                    ProcessorStatistics statistics = RoundRobinTaskProcessor
                             .builder()
                             .tasks(tasks)
                             .build()
                             .processTasksTraceable();
                     stats.add(Pair.of(tasks, statistics));
                 });
-        List<Pair<Double, Double>> collect = stats.stream()
-                .map(Pair::getRight)
-                .map(stat -> Pair.of((double) (stat.ioOperationsTime()) / stat.totalTime() * 100,
-                        stat.waitTimeStat().getAverage() / stat.totalTime() * 100))
-                .collect(Collectors.toList());
-        drawPlot(collect, "% IO operations time", "% average waiting time");
+        ProcessorStatistics sumStat = ProcessorStatistics.sum(stats.stream().map(Pair::getRight).toList());
+        AbstractTaskProcessor.printProcessorStatistics(sumStat);
+//        List<Pair<Double, Double>> collect = stats.stream()
+//                .map(Pair::getRight)
+//                .map(stat -> Pair.of((double) (stat.ioOperationsTime()) / stat.totalTime() * 100,
+//                        stat.waitTimeStat().getAverage() / stat.totalTime() * 100))
+//                .collect(Collectors.toList());
+//        PlotUtils.draw(collect, "% IO operations time", "% average waiting time");
     }
 
     @SneakyThrows

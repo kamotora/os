@@ -13,7 +13,7 @@ import java.util.Optional;
 @Getter
 @ToString
 @EqualsAndHashCode
-public class Task {
+public class Task implements Cloneable {
     // timestamp начала обработки
     @Setter
     private long start = 0L;
@@ -27,7 +27,7 @@ public class Task {
     private final List<Operation> operations;
     private final RichTextConfig decoration;
 
-    @Builder
+    @Builder(toBuilder = true)
     public Task(String name, List<Operation> operations, RichTextConfig decoration) {
         this.name = name;
         this.operations = operations;
@@ -127,5 +127,14 @@ public class Task {
 
     public enum Status {
         CREATED, PROCESSING, IO_OPERATION, WAITING, ENDED
+    }
+
+    @Override
+    public Task clone() {
+        var operations = getOperations().stream()
+                .map(Operation::clone).toList();
+        return this.toBuilder()
+                .operations(operations)
+                .build();
     }
 }
