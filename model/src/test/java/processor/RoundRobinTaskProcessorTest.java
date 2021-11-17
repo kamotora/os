@@ -25,7 +25,6 @@ class RoundRobinTaskProcessorTest {
     @SneakyThrows
     public void fullRandomTest() {
         var tasks = IntStream.range(0, 19)
-                .parallel()
                 .mapToObj(i ->
                         IntStream
                                 .range(0, RandomUtils.nextInt(2, 8))

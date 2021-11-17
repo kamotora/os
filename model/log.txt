@@ -1,0 +1,121 @@
+'1 task' info
+	Operation 'Calculation operation': type: CALCULATION, time: 500 milliseconds
+	Operation 'Network operation': type: IO, time: 500 milliseconds
+'2 task' info
+	Operation 'Calculation operation': type: CALCULATION, time: 500 milliseconds
+	Operation 'Calculation operation': type: CALCULATION, time: 500 milliseconds
+'3 task' info
+	Operation 'Network operation': type: IO, time: 500 milliseconds
+	Operation 'GUI operation': type: IO, time: 500 milliseconds
+'4 task' info
+	Operation 'Calculation operation': type: CALCULATION, time: 500 milliseconds
+	Operation 'Network operation': type: IO, time: 500 milliseconds
+	Operation 'Calculation operation': type: CALCULATION, time: 500 milliseconds
+	Operation 'GUI operation': type: IO, time: 500 milliseconds
+'5 task' info
+	Operation 'Network operation': type: IO, time: 1000 milliseconds
+	Operation 'Calculation operation': type: CALCULATION, time: 1000 milliseconds
+	Operation 'Calculation operation': type: CALCULATION, time: 1000 milliseconds
+	Operation 'GUI operation': type: IO, time: 1000 milliseconds
+
+BatchTaskProcessor has started task processing...
+1 task start execution
+Operation 'Calculation operation' with type 'CALCULATION' of task 1 task was executed
+'1 task' interrupted for IO operation
+2 task start execution
+Operation 'Calculation operation' with type 'CALCULATION' of task 2 task was executed
+Operation 'Network operation' with type IO of task 1 task was executed
+'1 task' ended
+Operation 'Calculation operation' with type 'CALCULATION' of task 2 task was executed
+'2 task' ended
+3 task start execution
+'3 task' interrupted for IO operation
+4 task start execution
+Operation 'Calculation operation' with type 'CALCULATION' of task 4 task was executed
+'4 task' interrupted for IO operation
+Operation 'Network operation' with type IO of task 3 task was executed
+5 task start execution
+'5 task' interrupted for IO operation
+'3 task' interrupted for IO operation
+Operation 'Network operation' with type IO of task 4 task was executed
+Operation 'Calculation operation' with type 'CALCULATION' of task 4 task was executed
+'4 task' interrupted for IO operation
+Operation 'Network operation' with type IO of task 5 task was executed
+Operation 'GUI operation' with type IO of task 3 task was executed
+'3 task' ended
+Operation 'Calculation operation' with type 'CALCULATION' of task 5 task was executed
+Operation 'GUI operation' with type IO of task 4 task was executed
+'4 task' ended
+Operation 'Calculation operation' with type 'CALCULATION' of task 5 task was executed
+'5 task' interrupted for IO operation
+Operation 'GUI operation' with type IO of task 5 task was executed
+'5 task' ended
+Tasks performed:
+
+Tasks per second: 0,768
+1 task:
+	 Рабочее время задачи (ms): 1000
+	 Время от начала старта системы до завершения задачи (ms): 1008
+	 Время от начала старта задачи до завершения задачи (ms): 1008
+	 Общее время вычислительных задач (ms): 500
+	 Общее время IO задач (ms): 500
+	 Общее время ожидания (ms): 7
+2 task:
+	 Рабочее время задачи (ms): 1000
+	 Время от начала старта системы до завершения задачи (ms): 1509
+	 Время от начала старта задачи до завершения задачи (ms): 1001
+	 Общее время вычислительных задач (ms): 1000
+	 Общее время IO задач (ms): 0
+	 Общее время ожидания (ms): 0
+3 task:
+	 Рабочее время задачи (ms): 1000
+	 Время от начала старта системы до завершения задачи (ms): 4012
+	 Время от начала старта задачи до завершения задачи (ms): 2503
+	 Общее время вычислительных задач (ms): 0
+	 Общее время IO задач (ms): 1000
+	 Общее время ожидания (ms): 1502
+4 task:
+	 Рабочее время задачи (ms): 2000
+	 Время от начала старта системы до завершения задачи (ms): 4513
+	 Время от начала старта задачи до завершения задачи (ms): 3003
+	 Общее время вычислительных задач (ms): 1000
+	 Общее время IO задач (ms): 1000
+	 Общее время ожидания (ms): 1002
+5 task:
+	 Рабочее время задачи (ms): 4000
+	 Время от начала старта системы до завершения задачи (ms): 6514
+	 Время от начала старта задачи до завершения задачи (ms): 4504
+	 Общее время вычислительных задач (ms): 2000
+	 Общее время IO задач (ms): 2000
+	 Общее время ожидания (ms): 501
+Статистика:
+	
+Время, затраченное на диспетчеризацию (ms): 12
+Время от старта системы до завершения всех задач (ms): 6514
+Общее время вычислительных операций (ms): 4500
+% Времени вычислительных операций от времени работы системы: 69
+Общее время IO операций (ms): 4500
+% времени IO операций от времени работы системы: 69
+
+Average Рабочее время задачи (ms): 1800,00
+Max Рабочее время задачи (ms): 4000
+Min Рабочее время задачи (ms): 1000
+Sum Рабочее время задачи (ms): 9000
+
+Average Время от начала старта системы до завершения задачи (ms): 2403,80
+Max Время от начала старта системы до завершения задачи (ms): 4504
+Min Время от начала старта системы до завершения задачи (ms): 1001
+Sum Время от начала старта системы до завершения задачи (ms): 12019
+
+Average Время от начала старта задачи до завершения задачи (ms): 3511,20
+Max Время от начала старта задачи до завершения задачи (ms): 6514
+Min Время от начала старта задачи до завершения задачи (ms): 1008
+Sum Время от начала старта задачи до завершения задачи (ms): 17556
+
+Average Общее время ожидания задачи (ms): 602,40
+Max Общее время ожидания задачи (ms): 1502
+Min Общее время ожидания задачи (ms): 0
+Sum Общее время ожидания задачи (ms): 3012
+% Среднего времени ожидания от времени работы системы: 9
+
+BatchTaskProcessor has finished task processing...
