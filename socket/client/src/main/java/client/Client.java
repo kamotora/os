@@ -2,6 +2,7 @@ package client;
 
 import exception.ClientException;
 import lombok.SneakyThrows;
+import org.apache.commons.lang3.RandomUtils;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -11,8 +12,8 @@ import java.net.Socket;
 
 public class Client implements AutoCloseable {
     private final Socket clientSocket;
-    private final PrintWriter out;
-    private final BufferedReader in;
+    private final PrintWriter outWriter;
+    private final BufferedReader inReader;
 
 
     public Client(int port) {
@@ -22,15 +23,15 @@ public class Client implements AutoCloseable {
     public Client(String ip, int port) {
         try {
             clientSocket = new Socket(ip, port);
-            clientSocket.setSoTimeout(5000);
+            clientSocket.setSoTimeout(2000);
         } catch (Exception e) {
             var ex = new ClientException("Error to create socket with %s:%s".formatted(ip, port), e);
             System.err.println(ex.getLocalizedMessage());
             throw ex;
         }
         try {
-            out = new PrintWriter(clientSocket.getOutputStream(), true);
-            in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+            outWriter = new PrintWriter(clientSocket.getOutputStream(), true);
+            inReader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
         } catch (IOException e) {
             var ex = new ClientException("Error to create streams for %s:%s".formatted(ip, port), e);
             System.err.println(ex.getLocalizedMessage());
@@ -40,16 +41,21 @@ public class Client implements AutoCloseable {
 
     @SneakyThrows
     public String sendMessage(String msg) {
-        out.println(msg);
-        var response = in.readLine();
-        return response;
+        System.out.printf("Sending message %s on %s%n", msg, clientSocket.getRemoteSocketAddress());
+        if (msg.contains("block")) {
+            // block socket
+            while (true)
+                outWriter.write(RandomUtils.nextInt());
+        } else
+            outWriter.println(msg);
+        return inReader.readLine();
     }
 
     @SneakyThrows
     @Override
     public void close() {
-        in.close();
-        out.close();
+        inReader.close();
+        outWriter.close();
         clientSocket.close();
     }
 }

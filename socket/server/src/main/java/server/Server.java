@@ -1,6 +1,7 @@
 package server;
 
 import exception.ServerException;
+import lombok.Getter;
 import lombok.SneakyThrows;
 import org.apache.commons.lang3.StringUtils;
 
@@ -14,19 +15,20 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class Server implements AutoCloseable {
+    @Getter
     private final ServerSocket serverSocket;
     private final ExecutorService executor;
 
     @SneakyThrows
     public Server(int port) {
-        serverSocket = new ServerSocket(port);
+        serverSocket = new ServerSocket(port, 1);
         this.executor = Executors.newFixedThreadPool(3);
     }
 
+    @SuppressWarnings("InfiniteLoopStatement")
     @SneakyThrows
     public void start() {
         while (true) {
-            System.out.println("Wait connection....");
             executor.submit(new Connection(serverSocket.accept()));
         }
     }
@@ -38,8 +40,8 @@ public class Server implements AutoCloseable {
     }
 
     private static class Connection implements AutoCloseable, Runnable {
-        private final PrintWriter out;
-        private final BufferedReader in;
+        private final PrintWriter outWriter;
+        private final BufferedReader inReader;
         private final Socket socket;
 
         @SneakyThrows
@@ -47,8 +49,8 @@ public class Server implements AutoCloseable {
             this.socket = socket;
             socket.setSoTimeout(5000);
             try {
-                out = new PrintWriter(socket.getOutputStream(), true);
-                in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                outWriter = new PrintWriter(socket.getOutputStream(), true);
+                inReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             } catch (IOException e) {
                 var addr = socket.getInetAddress();
                 var ex = new ServerException("Error to create streams for %s:%s".formatted(addr.getHostAddress(), socket.getPort()), e);
@@ -59,24 +61,17 @@ public class Server implements AutoCloseable {
 
         @SneakyThrows
         public void run() {
-            String request = in.readLine();
-            if (StringUtils.isNotBlank(request)) {
-                System.out.println("Client info: " + socket.toString());
-                System.out.printf("Request: %s%n", request);
-                var response = StringUtils.reverse(request);
-                System.out.printf("Response: %s%n", response);
-                out.println(response);
-            } else {
-                System.out.println("Receive blank string, return 'Bad request' msg...");
-                out.println("Bad request");
-            }
+            var request = inReader.readLine();
+            var response  = StringUtils.isNotBlank(request) ? StringUtils.reverse(request) : "Bad request";
+            System.out.printf("Client info: %s. Request: '%s'. Response: '%s'%n", socket.toString(), request, response);
+            outWriter.println(response);
         }
 
         @SneakyThrows
         @Override
         public void close() {
-            in.close();
-            out.close();
+            inReader.close();
+            outWriter.close();
             socket.close();
         }
     }
