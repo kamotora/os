@@ -4,8 +4,6 @@ import lombok.*;
 import lombok.experimental.Accessors;
 import lombok.experimental.FieldDefaults;
 
-import java.util.List;
-
 @Builder
 @Getter
 @Setter
@@ -13,7 +11,15 @@ import java.util.List;
 @Accessors(fluent = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @ToString
-public class ProcessTable {
-    String label;
-    List<PageInfo> pagesInfo;
+public class PageInfo {
+    boolean isReadOnly;
+    boolean isChanged;
+    boolean wasSwapped;
+    int physicalAddress;
+    int virtualAddress;
+    ProcessTable owner;
+
+    boolean isAllocated() {
+        return physicalAddress > -1;
+    }
 }

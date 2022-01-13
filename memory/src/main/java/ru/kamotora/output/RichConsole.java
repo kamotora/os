@@ -38,7 +38,11 @@ public class RichConsole {
         System.out.print(target);
     }
 
-    public static void print(RichTextConfig config, String... messages) {
-        print("\n" + String.join("\n", messages), config);
+//    public static void print(RichTextConfig config, String... messages) {
+//        print("\n" + String.join("\n", messages), config);
+//    }
+
+    public static void print(RichTextConfig config, String message, Object... substitutions) {
+        print(String.format(message, substitutions), config);
     }
 }

@@ -15,7 +15,7 @@ import java.util.List;
 public class Process {
     String label;
     int lifetime;
-    List<OwnedPageInfo> ownedPagesInfo;
+    List<VirtualPage> virtualPages;
 
     @Builder
     @Getter
@@ -23,7 +23,8 @@ public class Process {
     @EqualsAndHashCode
     @Accessors(fluent = true)
     @FieldDefaults(level = AccessLevel.PRIVATE)
-    public static class OwnedPageInfo {
+    public static class VirtualPage {
+        int address;
         boolean isReadOnly;
         boolean isChanged;
     }
