@@ -1,15 +1,13 @@
 package ru.kamotora.output;
 
-import java.awt.Color;
+import java.awt.*;
 
-public enum Background implements AnsiEscapeCode, RgbColor {
-    RED("\u001b[41m", Color.RED),
-    GREEN("\u001b[42m", Color.GREEN);
-
+public enum MyColor implements AnsiEscapeCode, RgbColor {
+    BLACK("\u001b[30m", Color.BLACK);
     private final String ansi;
     private final Color color;
 
-    Background(String ansi, Color color) {
+    MyColor(String ansi, Color color) {
         this.ansi = ansi;
         this.color = color;
     }
@@ -19,6 +17,7 @@ public enum Background implements AnsiEscapeCode, RgbColor {
         return ansi;
     }
 
+
     @Override
     public Color getColor() {
         return color;
@@ -26,6 +25,6 @@ public enum Background implements AnsiEscapeCode, RgbColor {
 
     @Override
     public String getRgbAsHex() {
-        return Integer.toHexString(color.getRGB()).substring(2); // without alpha
+        return Integer.toHexString(color.getRGB());
     }
 }

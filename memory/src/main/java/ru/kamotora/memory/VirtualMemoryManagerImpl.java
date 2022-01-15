@@ -2,9 +2,8 @@ package ru.kamotora.memory;
 
 import lombok.experimental.SuperBuilder;
 import ru.kamotora.RandomUtil;
-import ru.kamotora.memory.printer.PictureMemoryPrinter;
-import ru.kamotora.output.RichConsole;
-import ru.kamotora.output.RichTextConfig;
+import ru.kamotora.output.AbstractPrinter;
+import ru.kamotora.output.WordPrinter;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -12,6 +11,9 @@ import java.util.stream.IntStream;
 
 @SuperBuilder
 public class VirtualMemoryManagerImpl extends VirtualMemoryManager {
+
+    private static AbstractPrinter log = new WordPrinter();
+
     int processesCount;
     int timer;
 
@@ -24,20 +26,19 @@ public class VirtualMemoryManagerImpl extends VirtualMemoryManager {
             tryAddNewProcess(memoryPages, processTables, processes);
 
             // print memory
-            RichConsole.print(RichTextConfig.metaMessageStyle(), "Time tick: %s", timer);
-            new PictureMemoryPrinter().print(memoryPages);
+            log.print("Time tick: %s", timer);
+            log.print(memoryPages);
             if (!processes.isEmpty()) {
                 executeRandomProcess(processes, memoryPages, processTables);
             }
 
+            log.newLine();
             // Вывод
             for (int i = 0; i < processTables.size(); i++) {
                 ProcessTable table = processTables.get(i);
-                PrettyTable prettyTable = new PrettyTable("virtualAddress", "isReadOnly", "isChanged", "wasSwapped", "physicalAddress", "lastAllocationTime");
-                RichConsole.print(RichTextConfig.metaMessageStyle(),
-                        "\nProcess: %s", table.label());
-                RichConsole.print(RichTextConfig.metaMessageStyle(),
-                        "Time remain: %s", processes.get(i).lifetime());
+                PrettyTable prettyTable = new PrettyTable("virtualAddress", "readOnly", "changed", "wasSwapped", "physicalAddress", "lastAllocationTime");
+                log.print("Процесс: %s", table.label());
+                log.print("Осталось времени: %s", processes.get(i).lifetime());
                 for (int j = 0; j < table.pagesInfo().size(); j++) {
                     PageInfo info = table.pagesInfo().get(j);
                     var physicalPage = memoryPages.stream()
@@ -49,32 +50,32 @@ public class VirtualMemoryManagerImpl extends VirtualMemoryManager {
                             .orElse(-1);
                     prettyTable.addRow(info.virtualAddress(), info.isReadOnly(), info.isChanged(), info.wasSwapped(), info.physicalAddress(), lastAllocationTime);
                 }
-                System.out.println(prettyTable);
+                log.print(prettyTable);
             }
         }
+        log.save();
     }
 
     private void executeRandomProcess(List<Process> processes, List<PhysicalPage> memoryPages, List<ProcessTable> processTables) {
         Process activeProcess = RandomUtil.choiceElement(processes);
-        RichConsole.print(RichTextConfig.metaMessageStyle(),
-                "Active process: %s", activeProcess.label());
+        log.print("Активный процесс: %s", activeProcess.label());
         // Выбираем активную страницу процесса
         var activePage = RandomUtil.choiceElement(activeProcess.virtualPages());
         int addressOfActivePage = activePage.address();
-        RichConsole.print(RichTextConfig.metaMessageStyle(),
-                "Active virtual page: %s", addressOfActivePage);
+        log.print("Активная виртуальная страница: %s", addressOfActivePage);
         processTables.stream()
                 .filter(processTable -> processTable.label().equals(activeProcess.label()))
                 .findFirst()
                 .ifPresentOrElse(processTable -> {
                     long allocatedPagesCount = processTable.pagesInfo().stream().filter(PageInfo::isAllocated).count();
-                    RichConsole.print(RichTextConfig.metaMessageStyle(),
-                            "Virtual pages for this process: %s, allocated: %s",
+                    log.print("Кол-во виртуальных страниц: %s, в памяти: %s",
                             activeProcess.virtualPages().size(), allocatedPagesCount);
                     PageInfo activePageInfo = processTable.pagesInfo().get(addressOfActivePage);
                     if (!activePageInfo.isAllocated()) {
-                        RichConsole.print(RichTextConfig.metaMessageStyle(),
-                                "Active page isn't loaded, allocate memory for it");
+                        if (activePageInfo.wasSwapped())
+                            log.print("Активная страница была выгружена ранее, загружаем её");
+                        else
+                            log.print("Активная страница используется впервые, выделяем память для неё");
                         addPage(memoryPages, activePageInfo, processTables);
                     }
                     // Если страница доступна для чтения, пишем в неё с некоторой вероятностью
@@ -89,8 +90,7 @@ public class VirtualMemoryManagerImpl extends VirtualMemoryManager {
         activeProcess.lifetime(activeProcess.lifetime() - 1);
         // Время процесса вышло - освобождаем память
         if (activeProcess.lifetime() < 0) {
-            RichConsole.print(RichTextConfig.metaMessageStyle(),
-                    "Stop active process, lifetime is ended...");
+            log.print("Завершаем активный процесс, время жизни истекло...");
             for (int i = 0; i < processTables.size(); i++) {
                 ProcessTable processTable = processTables.get(i);
                 if (processTable.label().equals(activeProcess.label())) {
@@ -191,7 +191,7 @@ public class VirtualMemoryManagerImpl extends VirtualMemoryManager {
     }
 
     private void freeMemory(List<PhysicalPage> memoryPages, List<ProcessTable> processTables) {
-        RichConsole.print(RichTextConfig.metaMessageStyle(), "Not found free memory, start swapping...");
+        log.print("Не найдено свободной памяти, начинаем процесс своппинга...");
         memoryPages.stream()
                 // Ищем страницу, которая не выгружалась дольше всего (FIFO)
                 .min(Comparator.comparing(PhysicalPage::lastAllocationTime))
@@ -199,28 +199,23 @@ public class VirtualMemoryManagerImpl extends VirtualMemoryManager {
                     // Помещаем страницу как свободную
                     page.lastAllocationTime(-1);
                     page.isUsed(false);
-                    RichConsole.print(RichTextConfig.metaMessageStyle(),
-                            "Release occupied memory with physical address %s", page.address());
                     // Ищем эту страницу в таблице страниц
                     processTables.stream()
                             .flatMap(processTable -> processTable.pagesInfo().stream())
                             .filter(info -> info.physicalAddress() == page.address())
                             .findFirst().ifPresentOrElse(info -> {
-                                RichConsole.print(RichTextConfig.metaMessageStyle(),
-                                        "Start swapping page (process: %s, virtual addr: %s, physical  addr: %s)",
+                                log.print("Начинаем выгружать страницу на диск (process: %s, virtual addr: %s, physical addr: %s)",
                                         info.owner().label(), info.virtualAddress(), info.physicalAddress());
                                 info.physicalAddress(-1);
                                 if (info.isChanged()) {
-                                    RichConsole.print(RichTextConfig.metaMessageStyle(),
-                                            "Page is was changed. Swap it", page.address());
+                                    log.print("Страница была изменена. Выгружаем её", page.address());
                                     info.wasSwapped(true);
+                                    info.isChanged(false);
                                 } else if (!info.wasSwapped()) {
-                                    RichConsole.print(RichTextConfig.metaMessageStyle(),
-                                            "Page is was NOT changed, but not found in swap file. Swap it", page.address());
+                                    log.print("Страница НЕ была изменена, но не найдена на диске. Выгружаем её", page.address());
                                     info.wasSwapped(true);
                                 } else {
-                                    RichConsole.print(RichTextConfig.metaMessageStyle(),
-                                            "Page not changed and already contains in swap file", page.address());
+                                    log.print("Страница НЕ была изменена и найдена на диске", page.address());
                                 }
                             }, () -> {
                                 System.err.println(processTables);

@@ -1,24 +1,30 @@
 package ru.kamotora.output;
 
+import ru.kamotora.memory.PhysicalPage;
+import ru.kamotora.memory.PrettyTable;
+
+import java.util.List;
 import java.util.Optional;
 
-public class RichConsole {
+public class ConsolePrinter extends AbstractPrinter {
 
     private final static String RESET_ANSI = "\u001b[0m";
     private static final String EMPTY_STRING = "";
 
-    public static void newLine() {
+    @Override
+    public void newLine() {
         System.out.println();
     }
 
-    public static void print(String message, RichTextConfig config) {
+    @Override
+    public void print(String message, RichTextConfig config) {
         StringBuilder target = new StringBuilder();
         Optional.ofNullable(config)
                 .ifPresent(self ->
                         target
                                 // color
                                 .append(Optional.ofNullable(self.getColor())
-                                        .map(Color::getEscapeCode)
+                                        .map(MyColor::getEscapeCode)
                                         .orElse(EMPTY_STRING))
                                 // decoration
                                 .append(Optional.ofNullable(self.getDecoration())
@@ -38,11 +44,21 @@ public class RichConsole {
         System.out.print(target);
     }
 
-//    public static void print(RichTextConfig config, String... messages) {
-//        print("\n" + String.join("\n", messages), config);
-//    }
+    public void print(final List<PhysicalPage> virtualMemory) {
+        print(RichTextConfig.metaMessageStyle(), "Memory usage:");
+        for (var page : virtualMemory) {
+            RichTextConfig rtc = RichTextConfig.builder()
+                    .color(MyColor.BLACK)
+                    .background(getBackgroundForPage(page))
+                    .newLine(false)
+                    .build();
+            print(rtc, " %s |", page.address());
+        }
+        newLine();
+    }
 
-    public static void print(RichTextConfig config, String message, Object... substitutions) {
-        print(String.format(message, substitutions), config);
+    @Override
+    public void print(PrettyTable prettyTable) {
+        print(prettyTable.toString(), (RichTextConfig) null);
     }
 }

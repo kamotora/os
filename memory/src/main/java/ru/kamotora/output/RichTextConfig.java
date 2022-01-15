@@ -6,7 +6,7 @@ import lombok.Getter;
 @Builder
 @Getter
 public class RichTextConfig {
-    private final Color color;
+    private final MyColor color;
     private final Decoration decoration;
     private final Background background;
     @Builder.Default

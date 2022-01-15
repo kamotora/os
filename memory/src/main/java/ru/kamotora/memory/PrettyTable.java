@@ -1,5 +1,6 @@
 package ru.kamotora.memory;
 
+import lombok.Getter;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
@@ -8,6 +9,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+@Getter
 public class PrettyTable {
     private final List<String> headers = new ArrayList<>();
     private final List<List<String>> data = new ArrayList<>();
@@ -66,6 +68,7 @@ public class PrettyTable {
             result.append(formatRow(row));
         }
         result.append(formatRule());
+        result.append('\n');
         return result.toString();
     }
 
